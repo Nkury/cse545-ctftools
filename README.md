@@ -1,6 +1,18 @@
 # binaryfairy
 Team *I Am Root* CSE545 binary exploit scanning tool:
 
+## Dependencies
+python-dev libffi-dev build-essential virtualenvwrapper
+
+## Installation Instructions
+
+```buildoutcfg
+sudo aptitude install python-dev libffi-dev build-essential virtualenvwrapper
+sudo virtualenv angr
+sudo pip install angr
+git clone https://github.com/Nkury/cse545-ctftools.git
+```
+
 TODO:  Populate Readme
 
 ## Tool Requirements:
