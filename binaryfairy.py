@@ -3,9 +3,10 @@
 import os
 import sys
 import angr
+import pprint
 
 # Global "bad" function array
-bad_functions = ["strcpy", "strcat", "gets", "puts"]
+bad_functions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen"]
 
 # Error usage function
 def usage():
@@ -27,6 +28,17 @@ print("Binary Arch: " + str(proj.arch))
 print("Binary Entry: " + str(proj.entry))
 
 cfg = proj.analyses.CFG()
-print(dict(proj.kb.functions))
 
+# print out all function calls in the binary
+# print(list(cfg.kb.functions.values()))
+
+# print out
+for func in bad_functions:
+    for key, value in cfg.kb.functions.iteritems():
+        if func == value.name:
+            print("Found vulnerable function " + func + " at " + str(value))
+
+# print(cfg.kb.functions.keys()[cfg.kb.functions.values().index().name])
+
+# pprint.pprint(dict(cfg.kb.functions))
 print("~Hey, Listen!!~")
