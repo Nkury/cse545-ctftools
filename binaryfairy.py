@@ -1,9 +1,8 @@
 #!/usr/bin/python2
 
-import os
 import sys
 import angr
-import pprint
+import re
 
 # Global "bad" function array
 # TODO: pull from config file
@@ -29,6 +28,9 @@ print("Binary Entry: " + str(proj.entry))
 # Generate control flow graph for binary
 cfg = proj.analyses.CFG()
 
+# create empty list of vulnerable functions
+vulnFuncList = []
+
 # Search CFG for calls to vulnerable functions
 for func in bad_functions:
     # Iterate over functions in CFG
@@ -40,8 +42,18 @@ for func in bad_functions:
                 print("\n~Hey, Listen!! I found a call to " + func + "!~")
                 # Get node for vulnerable function call
                 entry_node = cfg.get_node(key)
+
                 for node in entry_node.predecessors:
+                    # Make sure node has a function name
                     if node.name:
-                        print(func + " called from " + node.name + " at address " + str(hex(node.addr)))
+                        try:
+                            name = re.search('^(.+?)\+', node.name).group(1)
+                        except AttributeError:
+                            name = node.name
 
+                        if node.name not in vulnFuncList:
+                            vulnFuncList.append(name)
 
+                        print(func + " called from " + name + " at address " + str(hex(node.addr)))
+
+print("List of vulnerable functions = " + str(vulnFuncList))
