@@ -37,6 +37,13 @@ for func in bad_functions:
     for key, value in cfg.kb.functions.iteritems():
         if func == value.name:
             print("Found call to vulnerable function " + func + " at " + str(hex(value.addr)))
+            # print("There were %d contexts for the entry block" % len(cfg.get_all_nodes(key)))
+            entry_node = cfg.get_node(key)
+            print("Predecessors of the entry point:", entry_node.predecessors)
+            # print("Successors of the entry point:", entry_node.successors)
+
+            # print("key = " + str(hex(key)))
+            # print("value = " + str(value))
 
 # print(cfg.kb.functions.keys()[cfg.kb.functions.values().index().name])
 
