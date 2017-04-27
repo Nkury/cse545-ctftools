@@ -18,8 +18,6 @@ if(len(sys.argv) != 2):
     usage()
     exit(-1)
 
-print("Parsing " + sys.argv[1])
-
 # Open file for parsing
 proj = angr.Project(sys.argv[1], load_options={'auto_load_libs': False})
 
@@ -35,15 +33,19 @@ cfg = proj.analyses.CFG()
 # print out
 for func in bad_functions:
     for key, value in cfg.kb.functions.iteritems():
-        if func == value.name:
-            print("Found call to vulnerable function " + func + " at " + str(hex(value.addr)))
-            # print("There were %d contexts for the entry block" % len(cfg.get_all_nodes(key)))
-            entry_node = cfg.get_node(key)
-            print("Predecessors of the entry point:", entry_node.predecessors)
-            # print("Successors of the entry point:", entry_node.successors)
+        if key < 0x01000000: # temporary hack to disregard library references
+            if func == value.name:
+                # print("Found call to vulnerable function " + func + " at " + str(hex(value.addr)))
+                # print("There were %d contexts for the entry block" % len(cfg.get_all_nodes(key)))
+                entry_node = cfg.get_node(key)
+                # print("Predecessors of the entry point:", entry_node.predecessors)
+                for node in entry_node.predecessors:
+                    if node.name:
+                        print(func + " called from " + node.name + " at address " + str(hex(node.addr)))
+                        # print("Successors of the entry point:", entry_node.successors)
 
-            # print("key = " + str(hex(key)))
-            # print("value = " + str(value))
+                # print("key = " + str(hex(key)))
+                # print("value = " + str(value))
 
 # print(cfg.kb.functions.keys()[cfg.kb.functions.values().index().name])
 
