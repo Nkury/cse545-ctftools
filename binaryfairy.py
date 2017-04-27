@@ -29,7 +29,8 @@ print("Binary Entry: " + str(proj.entry))
 cfg = proj.analyses.CFG()
 
 # create empty list of vulnerable functions
-vulnFuncList = []
+vulnFuncName = []
+vulnFuncAddr = []
 
 # Search CFG for calls to vulnerable functions
 for func in bad_functions:
@@ -47,13 +48,17 @@ for func in bad_functions:
                     # Make sure node has a function name
                     if node.name:
                         try:
-                            name = re.search('^(.+?)\+', node.name).group(1)
+                            parsed_node = re.search('^(.+?)\+(.+?)$', node.name)
+                            name = parsed_node.group(1)
+                            offset = int(parsed_node.group(2), 16)
+                            addr = node.addr - offset
                         except AttributeError:
                             name = node.name
+                            offset = 0
+                            addr = node.addr
 
-                        if node.name not in vulnFuncList:
-                            vulnFuncList.append(name)
+                        if name not in vulnFuncName:
+                            vulnFuncName.append(name)
+                            vulnFuncAddr.append(addr)
 
-                        print(func + " called from " + name + " at address " + str(hex(node.addr)))
-
-print("List of vulnerable functions = " + str(vulnFuncList))
+                        print(func + " called from " + name + "(" + str(hex(addr)) + ") at offset " + str(hex(offset)))
