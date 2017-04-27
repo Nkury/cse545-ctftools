@@ -36,7 +36,7 @@ cfg = proj.analyses.CFG()
 for func in bad_functions:
     for key, value in cfg.kb.functions.iteritems():
         if func == value.name:
-            print("Found vulnerable function " + func + " at " + str(value))
+            print("Found call to vulnerable function " + func + " at " + str(hex(value.addr)))
 
 # print(cfg.kb.functions.keys()[cfg.kb.functions.values().index().name])
 
