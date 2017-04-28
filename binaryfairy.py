@@ -30,7 +30,7 @@ def generateCFG(filename):
 # Search through CFG and find names and entry points for all
 # functions that call one of the vulnerable functions
 def locateVulnerableFunctions(cfg):
-    # create empty list of vulnerable functions
+    # create empty dictionary of vulnerable functions
     vulnFuncs = {}
 
     # Search CFG for calls to vulnerable functions
@@ -69,6 +69,15 @@ def disssembleBinary(filename):
     objdump = os.popen('objdump -d ' + sys.argv[1]).read()
     return objdump
 
+def parseDisassembly(objdump, vulnFuncs):
+    dissFuncs = {}
+    for name, addr in vulnFuncs.iteritems():
+        startIndex = objdump.find(str(format(addr, 'x')))
+        substr = objdump[startIndex:]
+        endIndex = substr.find("\n\n")
+        dissFuncs[name] = substr[:endIndex]
+    return dissFuncs
+
 # Main
 if(len(sys.argv) != 2):
     usage()
@@ -84,3 +93,12 @@ vulnFuncs = locateVulnerableFunctions(cfg)
 # Disassemble binary
 # objdump is the output of running objdump
 objdump = disssembleBinary(sys.argv[1])
+
+# Chop up disassembly to only include vulnerable functions
+# dissFuncs is a dictionary with key = <name> and value = <objdump for function>
+dissFuncs = parseDisassembly(objdump, vulnFuncs)
+
+for name, disassembly in dissFuncs.iteritems():
+    print("\nPossible vulnerable function found in " + name + "!!")
+    print(disassembly)
+
