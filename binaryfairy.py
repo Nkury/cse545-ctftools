@@ -65,6 +65,10 @@ def locateVulnerableFunctions(cfg):
 
     return vulnFuncs
 
+def disssembleBinary(filename):
+    objdump = os.popen('objdump -d ' + sys.argv[1]).read()
+    return objdump
+
 # Main
 if(len(sys.argv) != 2):
     usage()
@@ -73,7 +77,10 @@ if(len(sys.argv) != 2):
 # Generate CFG
 cfg = generateCFG(sys.argv[1])
 
-locateVulnerableFunctions(cfg)
+# Locate all functions that call vulnerable function
+# vulnFuncs is a dictionary with key = <name> and value = <entry point>
+vulnFuncs = locateVulnerableFunctions(cfg)
 
-# Run objdump on file
-objdump = os.popen('objdump -d ' + sys.argv[1]).read()
+# Disassemble binary
+# objdump is the output of running objdump
+objdump = disssembleBinary(sys.argv[1])
