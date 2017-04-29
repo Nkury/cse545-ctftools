@@ -6,11 +6,18 @@ python-dev libffi-dev build-essential virtualenvwrapper
 
 ## Installation Instructions
 
+Navigate to folder where you'd like to install our tools
 ```buildoutcfg
-sudo aptitude install python-dev libffi-dev build-essential virtualenvwrapper
+mkdir ~/i_am_root_ctf && cd ~/i_am_root_ctf
+
+```
+Run the following commands to download the tools, and install the required dependences
+NOTE:  These package names apply to *buntu flavors of Linux.  We tested this on Xubuntu 16.04 x64 [Link to iso file](http://ftp.ussg.iu.edu/linux/xubuntu/16.04/release/xubuntu-16.04.2-desktop-amd64.iso)
+```buildoutcfg
+sudo aptitude install git python-dev libffi-dev build-essential virtualenvwrapper
+git clone https://github.com/Nkury/cse545-ctftools.git
 sudo virtualenv angr
 sudo pip install angr
-git clone https://github.com/Nkury/cse545-ctftools.git
 ```
 
 TODO:  Populate Readme
