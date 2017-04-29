@@ -3,13 +3,11 @@ Team *I Am Root* CSE545 binary exploit scanning tool:
 
 ## Dependencies
 python-dev libffi-dev build-essential virtualenvwrapper
-
 ## Installation Instructions
 
 Navigate to folder where you'd like to install our tools
 ```buildoutcfg
 mkdir ~/i_am_root_ctf && cd ~/i_am_root_ctf
-
 ```
 Run the following commands to download the tools, and install the required dependences
 NOTE:  These package names apply to *buntu flavors of Linux.  We tested this on Xubuntu 16.04 x64 [Link to iso file](http://ftp.ussg.iu.edu/linux/xubuntu/16.04/release/xubuntu-16.04.2-desktop-amd64.iso)
@@ -20,7 +18,6 @@ cd cse545-ctftools
 sudo virtualenv angr
 sudo pip install angr
 ```
-
 TODO:  Populate Readme
 
 ## Tool Requirements:
