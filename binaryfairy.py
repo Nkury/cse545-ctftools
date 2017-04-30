@@ -4,11 +4,19 @@ import os
 import sys
 import angr
 import re
-import overflow_detection
+#import overflow_detection
 
 # Global "bad" function array
 # TODO: pull from config file
 bad_functions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen"]
+
+class vulnFunc:
+    def __init__(self):
+        self.name = ""
+        self.addr = 0x0
+        self.func = ""
+        self.funcAddr = 0x0
+        self.disassembly = ""
 
 # Error usage function
 def usage():
@@ -32,7 +40,7 @@ def generateCFG(filename):
 # functions that call one of the vulnerable functions
 def locateVulnerableFunctions(cfg):
     # create empty dictionary of vulnerable functions
-    vulnFuncs = {}
+    vulnFuncs = []
 
     # Search CFG for calls to vulnerable functions
     for func in bad_functions:
@@ -42,27 +50,27 @@ def locateVulnerableFunctions(cfg):
             if key < 0x01000000:
                 # Found call to vulnerable function
                 if func == value.name:
-                    print("\n~Hey, Listen!! I found a call to " + func + "!~")
                     # Get node for vulnerable function call
                     entry_node = cfg.get_node(key)
 
-                    for node in entry_node.predecessors:
+                    for node in entry_node.successors:
+                        vFunc = vulnFunc()
                         # Make sure node has a function name
-                        if node.name:
+                        if node.name and node.addr < 0x01000000:
                             try:
                                 parsed_node = re.search('^(.+?)\+(.+?)$', node.name)
-                                name = parsed_node.group(1)
-                                offset = int(parsed_node.group(2), 16)
-                                addr = node.addr - offset
+                                vFunc.name = parsed_node.group(1)
+                                vFunc.addr = node.addr - int(parsed_node.group(2), 16)
+                                vFunc.func = func
+                                vFunc.funcAddr = node.addr
                             except AttributeError:
-                                name = node.name
-                                offset = 0
-                                addr = node.addr
+                                vFunc.name = node.name
+                                vFunc.addr = node.addr
+                                vFunc.func = func
+                                vFunc.funcAddr = node.addr
 
-                            if name not in vulnFuncs:
-                                vulnFuncs[name] = addr
-
-                            print(func + " called from " + name + "(" + str(hex(addr)) + ") at offset " + str(hex(offset)))
+                            if vFunc.name not in vulnFuncs:
+                                vulnFuncs.append(vFunc)
 
     return vulnFuncs
 
@@ -71,13 +79,12 @@ def disssembleBinary(filename):
     return objdump
 
 def parseDisassembly(objdump, vulnFuncs):
-    dissFuncs = {}
-    for name, addr in vulnFuncs.iteritems():
-        startIndex = objdump.find(str(format(addr, 'x')))
-        substr = objdump[startIndex:]
+    for vFunc in vulnFuncs:
+        startIndex = objdump.find(str(format(vFunc.addr, 'x')) + ":")
+        substr = objdump[startIndex-2:]
         endIndex = substr.find("\n\n")
-        dissFuncs[name] = substr[:endIndex]
-    return dissFuncs
+        vFunc.disassembly = substr[:endIndex]
+    return vulnFuncs
 
 # Main
 if(len(sys.argv) != 2):
@@ -99,7 +106,7 @@ objdump = disssembleBinary(sys.argv[1])
 # dissFuncs is a dictionary with key = <name> and value = <objdump for function>
 dissFuncs = parseDisassembly(objdump, vulnFuncs)
 
-for name, disassembly in dissFuncs.iteritems():
-    print("\nPossible vulnerable function found in " + name + "!!")
-    print(disassembly)
+for vFunc in vulnFuncs:
+    print("\n~Hey, Listen!! " + vFunc.name + " calls " + vFunc.func + " at address 0x" + str(format(vFunc.addr, 'x')) + "!~")
+    print(vFunc.disassembly)
 
