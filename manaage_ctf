@@ -1,0 +1,126 @@
+#!/usr/bin/python
+
+############################
+## Connor Nelson, 2017    ##
+## with enhancements from ##
+## Sean Gatenby           ##
+############################
+
+import os
+import argparse
+import sys
+import pprint
+
+from ictf import iCTF
+
+ROOT_KEY_PATH = 'root.key'
+CTF_KEY_PATH = 'ctf.key'
+ROOT_SCRIPT_PATH = 'connect_root'
+CTF_SCRIPT_PATH = 'connect_ctf'
+
+SCRIPT = \
+"""
+#!/bin/bash
+
+ssh -i %s -p %d %s@%s
+"""
+
+def get_ssh_keys(team):
+    keys = team.get_ssh_keys()
+
+    with open(ROOT_KEY_PATH, 'wb') as root_key:
+        root_key.write(keys['root_key'])
+    os.chmod(ROOT_KEY_PATH, 0600)
+
+    with open(CTF_KEY_PATH, 'wb') as ctf_key:
+        ctf_key.write(keys['ctf_key'])
+    os.chmod(CTF_KEY_PATH, 0600)
+
+    with open(ROOT_SCRIPT_PATH, 'w') as root_script:
+        connect_root = SCRIPT % (ROOT_KEY_PATH, keys['port'], 'root', keys['ip'])
+        root_script.write(connect_root)
+    os.chmod(ROOT_SCRIPT_PATH, 0700)
+
+    with open(CTF_SCRIPT_PATH, 'w') as ctf_script:
+        connect_ctf = SCRIPT % (CTF_KEY_PATH, keys['port'], 'ctf', keys['ip'])
+        ctf_script.write(connect_ctf)
+    os.chmod(CTF_SCRIPT_PATH, 0700)
+
+    print("Successfully found SSH keys")
+    print("Team ID: %d" % (keys["team_id"]))
+    print("IP Address: %s" % (keys["ip"]))
+    print("Port: %d" % (keys["port"]))
+    print("Connect to root with: ./%s" % (ROOT_SCRIPT_PATH))
+    print("Connect to ctf with: ./%s\n" % (CTF_SCRIPT_PATH))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--team_interface', type=str, required=True)
+    parser.add_argument('-u', '--username', type=str, required=True)
+    parser.add_argument('-p', '--password', type=str, required=True)
+    parser.add_argument('-d', '--download_keys', action="store_true", required=False)
+    args = parser.parse_args()
+
+    pp = pprint.PrettyPrinter()
+
+    team_interface = 'http://' + args.team_interface + '/'
+    client = iCTF(team_interface)
+
+    team = client.login(args.username, args.password)
+
+    if args.download_keys:
+        get_ssh_keys(team)
+
+    exit = False
+    service_list = []
+
+    while(exit == False):
+        print("Please select an option:")
+        print("1: Get Game Status")
+        print("2: Get Service List")
+        print("3: Get Targets")
+        print("4: Submit Flag")
+        print("5: Exit")
+
+        selection = input()
+
+        if selection == 1:
+            print("Game Status")
+            status = team.get_game_status()
+            for s in status:
+                pp.pprint(s)
+
+        elif selection == 2:
+            print("Service List:")
+            services = team.get_service_list()
+
+            # Clear out the list
+            service_list = []
+
+            for s in services:
+                pp.pprint(s)
+                service_list.append(s['service_id'])
+
+        elif selection == 3:
+            print("Get Targets")
+
+            if(service_list == []):
+                print("Please run Service List first\n")
+            for service in service_list:
+                print("service_name: " + str(service))
+                targets = team.get_targets(service)
+                pp.pprint(targets)
+
+        elif selection == 4:
+            print("Submit flag")
+            flags = []
+            flag = input("Please Enter Flags ")
+            flags.append(flag)
+            team.submit_flag(flags)
+
+        elif selection == 5:
+            sys.exit()
+
+if __name__ == '__main__':
+    main()
