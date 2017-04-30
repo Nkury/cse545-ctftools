@@ -8,14 +8,21 @@ import re
 
 # Global "bad" function array
 # TODO: pull from config file
-bad_functions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen"]
+unsafe_functions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen", "strcmp"]
 
 class vulnFunc:
     def __init__(self):
         self.name = ""
         self.addr = 0x0
-        self.func = ""
-        self.funcAddr = 0x0
+        self.unsafeFuncList = []
+        self.unsafeFuncAddrList = []
+        self.disassembly = ""
+
+    def clear(self):
+        self.name = ""
+        self.addr = 0x0
+        self.unsafeFuncList = []
+        self.unsafeFuncAddrList = []
         self.disassembly = ""
 
 # Error usage function
@@ -39,38 +46,66 @@ def generateCFG(filename):
 # Search through CFG and find names and entry points for all
 # functions that call one of the vulnerable functions
 def locateVulnerableFunctions(cfg):
-    # create empty dictionary of vulnerable functions
+    # create empty list of vulnFunc objects
     vulnFuncs = []
+    vulnFuncIndex = 0
+    vulnFuncName = ""
+    vulnFuncAddr = 0x0
+    # vFunc = vulnFunc()
 
-    # Search CFG for calls to vulnerable functions
-    for func in bad_functions:
+    # Search CFG for calls to unsafe functions
+    for unsafeFunc in unsafe_functions:
         # Iterate over functions in CFG
-        for key, value in cfg.kb.functions.iteritems():
+        for funcAddr, func in cfg.kb.functions.iteritems():
             # Temporary hack to disregard library references
-            if key < 0x01000000:
-                # Found call to vulnerable function
-                if func == value.name:
+            if funcAddr < 0x01000000:
+                # Found call to unsafe function
+                if unsafeFunc == func.name:
                     # Get node for vulnerable function call
-                    entry_node = cfg.get_node(key)
+                    unsafeFunc_node = cfg.get_node(funcAddr)
 
-                    for node in entry_node.successors:
-                        vFunc = vulnFunc()
+                    for vulnFunc_node in unsafeFunc_node.successors:
                         # Make sure node has a function name
-                        if node.name and node.addr < 0x01000000:
+                        if vulnFunc_node.name and vulnFunc_node.addr < 0x01000000:
+                            # Some node.names have hex offsets applied to them
+                            # these need to be pulled out before we can use them
                             try:
-                                parsed_node = re.search('^(.+?)\+(.+?)$', node.name)
-                                vFunc.name = parsed_node.group(1)
-                                vFunc.addr = node.addr - int(parsed_node.group(2), 16)
-                                vFunc.func = func
-                                vFunc.funcAddr = node.addr
+                                parsedVulnFunc_node = re.search('^(.+?)\+(.+?)$', vulnFunc_node.name)
+                                vulnFuncName = parsedVulnFunc_node.group(1)
+                                vulnFuncAddr = vulnFunc_node.addr - int(parsedVulnFunc_node.group(2), 16)
                             except AttributeError:
-                                vFunc.name = node.name
-                                vFunc.addr = node.addr
-                                vFunc.func = func
-                                vFunc.funcAddr = node.addr
+                                vulnFuncName = vulnFunc_node.name
+                                vulnFuncAddr = vulnFunc_node.addr
 
-                            if vFunc.name not in vulnFuncs:
+                            # if vulnFunc object for vulnFuncName already in array, point vFunc to it
+                            # and update the unsafeFuncList and unsafeFuncListAddr arrays
+                            if any(f.name == vulnFuncName for f in vulnFuncs):
+                                for index, f in enumerate(vulnFuncs):
+                                    if f.name == vulnFuncName:
+                                        vulnFuncIndex = index
+                                        vFunc = vulnFuncs[vulnFuncIndex]
+                                        vFunc.unsafeFuncList.append(unsafeFunc)
+                                        vFunc.unsafeFuncAddrList.append(vulnFunc_node.addr)
+                            else:
+                                # Create new vulnFunc instance to be populated and appended
+                                vFunc = vulnFunc()
+
+                                # Update the name and address fields for that vulnerable function
+                                vFunc.name = vulnFuncName
+                                vFunc.addr = vulnFuncAddr
+                                vFunc.unsafeFuncList.append(unsafeFunc)
+                                vFunc.unsafeFuncAddrList.append(vulnFunc_node.addr)
+
                                 vulnFuncs.append(vFunc)
+
+    print("\nPrinting Current vulnFunc Array")
+    for i, f in enumerate(vulnFuncs):
+        print("vFunc[" + str(i) + "].name: " + f.name)
+        print("vFunc[" + str(i) + "].addr: 0x" + str(format(f.addr, 'x')))
+        for j, u in enumerate(f.unsafeFuncList):
+            print("vFunc[" + str(i) + "].unsafeFuncList[" + str(j) + "]: " + u)
+            print("vFunc[" + str(i) + "].unsafeFuncAddrList[" + str(j) + "]: 0x" + str(format(f.unsafeFuncAddrList[j], 'x')))
+    print("done\n")
 
     return vulnFuncs
 
@@ -107,6 +142,10 @@ objdump = disssembleBinary(sys.argv[1])
 dissFuncs = parseDisassembly(objdump, vulnFuncs)
 
 for vFunc in vulnFuncs:
-    print("\n~Hey, Listen!! " + vFunc.name + " calls " + vFunc.func + " at address 0x" + str(format(vFunc.funcAddr, 'x')) + "!~")
+    print("\n~Hey, Listen!! " + vFunc.name + "(" + str(format(vFunc.addr, 'x')) + ") calls:\n")
+
+    for index, func in enumerate(vFunc.unsafeFuncList):
+        print(str(func) + " at address 0x" + str(format(vFunc.unsafeFuncAddrList[index], 'x')))
+
     print(vFunc.disassembly)
 
