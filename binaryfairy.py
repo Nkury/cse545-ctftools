@@ -4,6 +4,7 @@ import os
 import sys
 import angr
 import re
+import overflow_detection
 
 # Global "bad" function array
 # TODO: pull from config file
