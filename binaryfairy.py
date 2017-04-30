@@ -107,6 +107,6 @@ objdump = disssembleBinary(sys.argv[1])
 dissFuncs = parseDisassembly(objdump, vulnFuncs)
 
 for vFunc in vulnFuncs:
-    print("\n~Hey, Listen!! " + vFunc.name + " calls " + vFunc.func + " at address 0x" + str(format(vFunc.addr, 'x')) + "!~")
+    print("\n~Hey, Listen!! " + vFunc.name + " calls " + vFunc.func + " at address 0x" + str(format(vFunc.funcAddr, 'x')) + "!~")
     print(vFunc.disassembly)
 
