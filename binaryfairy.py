@@ -10,7 +10,8 @@ import archinfo
 
 # Global "bad" function array
 # TODO: pull from config file
-unsafe_functions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen", "strcmp"]
+unsafeFunctions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen", "strcmp"]
+minBuffSize = 0x100
 
 class vulnFunc:
     def __init__(self):
@@ -18,6 +19,8 @@ class vulnFunc:
         self.addr = 0x0
         self.unsafeFuncList = []
         self.unsafeFuncAddrList = []
+        self.bufferOffsetList = []
+        self.bufferAddrList = []
         self.disassembly = ""
 
     def clear(self):
@@ -25,6 +28,8 @@ class vulnFunc:
         self.addr = 0x0
         self.unsafeFuncList = []
         self.unsafeFuncAddrList = []
+        self.bufferOffsetList = []
+        self.bufferAddrList = []
         self.disassembly = ""
 
 # Error usage function
@@ -38,7 +43,7 @@ def openProj(filename):
 
     print("Binary Name: " + proj.filename)
     print("Binary Arch: " + str(proj.arch))
-    print("Binary Entry: " + str(proj.entry))
+    print("Binary Entry: 0x" + str(format(proj.entry, 'x')))
     return proj
 
 # Generate CFG for the binary and return it
@@ -57,7 +62,7 @@ def locateVulnerableFunctions(cfg):
     vulnFuncAddr = 0x0
 
     # Search CFG for calls to unsafe functions
-    for unsafeFunc in unsafe_functions:
+    for unsafeFunc in unsafeFunctions:
         # Iterate over functions in CFG
         for funcAddr, func in cfg.kb.functions.iteritems():
             # Temporary hack to disregard library references
@@ -88,7 +93,7 @@ def locateVulnerableFunctions(cfg):
                                         vulnFuncIndex = index
                                         vFunc = vulnFuncs[vulnFuncIndex]
                                         vFunc.unsafeFuncList.append(unsafeFunc)
-                                        vFunc.unsafeFuncAddrList.append(vulnFunc_node.addr)
+                                        vFunc.unsafeFuncAddrList.append(0) # Invalid for now, but will populate later in code
                             else:
                                 # Create new vulnFunc instance to be populated and appended
                                 vFunc = vulnFunc()
@@ -97,7 +102,7 @@ def locateVulnerableFunctions(cfg):
                                 vFunc.name = vulnFuncName
                                 vFunc.addr = vulnFuncAddr
                                 vFunc.unsafeFuncList.append(unsafeFunc)
-                                vFunc.unsafeFuncAddrList.append(vulnFunc_node.addr)
+                                vFunc.unsafeFuncAddrList.append(0) # Invalid for now, but will populate later in code
 
                                 vulnFuncs.append(vFunc)
 
@@ -115,18 +120,52 @@ def locateBuffers(vulnFunc, arch):
     else:
         sys.exit("Unsupported architecture")
 
+    # Create regex string to match:
+    # ebp - some value
+    searchString = "^\s*?(\w+?):(?:(?:.*?-(0x\w+?)\(" + ebp + "\).*?)"
+
+    # vulnFunc.unsafeFuncList[] entries
+    for funcs in vulnFunc.unsafeFuncList:
+        searchString += "|(?:.*?<(" + funcs + ")@plt>)"
+
+    # must add trailing ')' to match the beginning one
+    searchString += ")$"
+
+    # print("searchString: " + searchString)
+
+    # compile regex pattern to match when looping through the lines
+    pattern = re.compile(searchString)
+
+    currentAddress = 0x0
+    unsafeFuncAddrIndex = 0
+    foundBuffer = False
+
     # Loop through the disassembly code and search for reference to %ebp-value
     # If we see %ebp-value before a call to an unsafe function, there may be a
     # buffer overflow vulnerability
-    for lines in disasm:
-        match = re.search('^\s*(\w+?):\s*?\w*?\s*(.+?)$', lines)
+    for index, lines in enumerate(disasm):
+        m = pattern.match(lines)
 
-        if match:
-            print(match.group(1) + " " + match.group(2))
-        else:
-            print("Match failed:\n" + lines)
+        if m:
+            for groupNum, g in enumerate(m.groups()):
+                if g:
+                    # Store the current address
+                    if groupNum == 0:
+                        currentAddress = int(g, 16)
+                    # Store the buffer address and offset
+                    elif groupNum == 1:
+                        offset = int(g, 16)
+                        # Check if the buffer is large enough
+                        if offset > minBuffSize:
+                            foundBuffer = True
+                            vulnFunc.bufferAddrList.append(currentAddress)
+                            vulnFunc.bufferOffsetList.append(offset)
+                    # Store the address of the unsafe function call
+                    else:
+                        vulnFunc.unsafeFuncAddrList[unsafeFuncAddrIndex] = currentAddress
+                        unsafeFuncAddrIndex += 1
 
-
+    return foundBuffer
 
 def disassembleBinary(filename):
     objdump = os.popen('objdump -dC --no-show-raw-insn ' + sys.argv[1]).read()
@@ -163,13 +202,20 @@ objdump = disassembleBinary(sys.argv[1])
 dissFuncs = parseDisassembly(objdump, vulnFuncs)
 
 for vFunc in vulnFuncs:
-    print("\n~Hey, Listen!!~ " + vFunc.name + "(" + str(format(vFunc.addr, 'x')) + ") calls:")
+    foundPossibleVuln = False
 
-    for index, func in enumerate(vFunc.unsafeFuncList):
-        print(str(func) + " at address 0x" + str(format(vFunc.unsafeFuncAddrList[index], 'x')))
+    print("Searching for vulnerabilities in " + vFunc.name)
 
-    # print("Disassembly of " + vFunc.name + ":")
-    # print(vFunc.disassembly)
+    # If we found buffers of sufficient size:
+    if locateBuffers(vFunc, proj.arch):
 
-    locateBuffers(vFunc, proj.arch)
+        for i, unsafeFuncAddr in enumerate(vFunc.unsafeFuncAddrList):
+            for j, buffAddr in enumerate(vFunc.bufferAddrList):
 
+                if buffAddr < unsafeFuncAddr:
+                    foundPossibleVuln = True
+                    print("0x" + str(format(buffAddr, 'x')) + ": [ebp-0x" + str(format(vFunc.bufferOffsetList[j], 'x')) + "] reference before calling " + vFunc.unsafeFuncList[i] + "(0x" + str(format(unsafeFuncAddr, 'x')) + ")")
+
+        if foundPossibleVuln:
+            print("Disassembly of " + vFunc.name + ":")
+            print(vFunc.disassembly)
