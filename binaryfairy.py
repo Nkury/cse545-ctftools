@@ -68,6 +68,8 @@ def locateVulnerableFunctions(cfg):
             # Temporary hack to disregard library references
             print("funcAddr" + str(format(funcAddr, 'x')))
             if funcAddr < 0x01000000:
+                print("unsafeFunc = " + unsafeFunc)
+                print("func.name = " + func.name)
                 # Found call to unsafe function
                 if unsafeFunc == func.name:
                     # Get node for vulnerable function call
