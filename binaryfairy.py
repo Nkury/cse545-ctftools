@@ -66,10 +66,10 @@ def locateVulnerableFunctions(cfg):
         # Iterate over functions in CFG
         for funcAddr, func in cfg.kb.functions.iteritems():
             # Temporary hack to disregard library references
-            print("funcAddr" + str(format(funcAddr, 'x')))
+            # print("funcAddr" + str(format(funcAddr, 'x')))
             if funcAddr < 0x010000000:
-                print("unsafeFunc = " + unsafeFunc)
-                print("func.name = " + func.name)
+                # print("unsafeFunc = " + unsafeFunc)
+                # print("func.name = " + func.name)
                 # Found call to unsafe function
                 if unsafeFunc == func.name:
                     # Get node for vulnerable function call
