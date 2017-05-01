@@ -7,11 +7,9 @@ import re
 import archinfo
 import argparse
 
-#import overflow_detection
-
-# Global "bad" function array
+# Global "unsafe" function array
 # TODO: pull from config file
-unsafeFunctions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen", "strcmp"]
+unsafeFunctions = ["strcpy", "strcat", "strrok", "gets", "fgets", "strlen", "strcmp"]
 minBuffSize = 0x100
 printDisassembly = False
 
