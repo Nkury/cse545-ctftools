@@ -5,6 +5,7 @@ import sys
 import angr
 import re
 import archinfo
+import argparse
 
 #import overflow_detection
 
@@ -12,6 +13,7 @@ import archinfo
 # TODO: pull from config file
 unsafeFunctions = ["strcpy", "strcat", "gets", "fgets", "puts", "fputs", "strlen", "strcmp"]
 minBuffSize = 0x100
+printDisassembly = False
 
 class vulnFunc:
     def __init__(self):
@@ -34,7 +36,7 @@ class vulnFunc:
 
 # Error usage function
 def usage():
-    print("Usage: " + __file__ + " <path to binary file>")
+    print("Usage: " + __file__ + " <path to binary file> [-d]")
     print("\tExample: " + __file__ + " ./test.bin")
 
 def openProj(filename):
@@ -85,7 +87,7 @@ def locateVulnerableFunctions(cfg):
                                 vulnFuncName = vulnFunc_node.name
                                 vulnFuncAddr = vulnFunc_node.addr
 
-                            # if vulnFunc object for vulnFuncName already in array, point vFunc to it
+                            # if vule:nFunc object for vulnFuncName already in array, point vFunc to it
                             # and update the unsafeFuncList and unsafeFuncListAddr arrays
                             if any(f.name == vulnFuncName for f in vulnFuncs):
                                 for index, f in enumerate(vulnFuncs):
@@ -168,7 +170,7 @@ def locateBuffers(vulnFunc, arch):
     return foundBuffer
 
 def disassembleBinary(filename):
-    objdump = os.popen('objdump -dC --no-show-raw-insn ' + sys.argv[1]).read()
+    objdump = os.popen('objdump -dC --no-show-raw-insn ' + filename).read()
     return objdump
 
 def parseDisassembly(objdump, vulnFuncs):
@@ -180,11 +182,16 @@ def parseDisassembly(objdump, vulnFuncs):
     return vulnFuncs
 
 # Main
-if(len(sys.argv) != 2):
-    usage()
-    exit(-1)
+parser = argparse.ArgumentParser(description="Search binary files for vulnerable functions")
+parser.add_argument("filename", type=str, help="binary to be searched")
+parser.add_argument("-d", "--disassemble", action="store_true",
+                    help="Disassemble vulnerable functions and print the assembly code")
+args = parser.parse_args()
 
-proj = openProj(sys.argv[1])
+if args.disassemble:
+    printDisassembly = True
+
+proj = openProj(args.filename)
 
 # Generate CFG
 cfg = generateCFG(proj)
@@ -195,7 +202,7 @@ vulnFuncs = locateVulnerableFunctions(cfg)
 
 # Disassemble binary
 # objdump is the output of running objdump
-objdump = disassembleBinary(sys.argv[1])
+objdump = disassembleBinary(args.filename)
 
 # Chop up disassembly to only include vulnerable functions
 # dissFuncs is a dictionary with key = <name> and value = <objdump for function>
@@ -203,8 +210,7 @@ dissFuncs = parseDisassembly(objdump, vulnFuncs)
 
 for vFunc in vulnFuncs:
     foundPossibleVuln = False
-
-    print("Searching for vulnerabilities in " + vFunc.name)
+    firstVuln = True
 
     # If we found buffers of sufficient size:
     if locateBuffers(vFunc, proj.arch):
@@ -213,9 +219,14 @@ for vFunc in vulnFuncs:
             for j, buffAddr in enumerate(vFunc.bufferAddrList):
 
                 if buffAddr < unsafeFuncAddr:
+
+                    if firstVuln == True:
+                        print("~~~Hey, Listen!!! I found a possible vulnerability in " + vFunc.name + "!!~~~")
+                        firstVuln = False
+
                     foundPossibleVuln = True
                     print("0x" + str(format(buffAddr, 'x')) + ": [ebp-0x" + str(format(vFunc.bufferOffsetList[j], 'x')) + "] reference before calling " + vFunc.unsafeFuncList[i] + "(0x" + str(format(unsafeFuncAddr, 'x')) + ")")
 
-        if foundPossibleVuln:
+        if foundPossibleVuln and printDisassembly:
             print("Disassembly of " + vFunc.name + ":")
             print(vFunc.disassembly)
