@@ -116,8 +116,13 @@ def main():
             print("Submit flag")
             flags = []
             flag = input("Please Enter Flags ")
-            flags.append(flag)
-            team.submit_flag(flags)
+            flag = flag.split(" ")
+            flags = flag
+            print(flags)
+
+            if(team.submit_flag(flags)):
+                print("correct flag")
+
 
         elif selection == 5:
             sys.exit()
