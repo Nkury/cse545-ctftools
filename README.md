@@ -1,5 +1,6 @@
 # Team *I Am Root* CTF Suite
 CSE545 - Software Security - ASU Fall 2016
+
 Members: gates, a11aakbar, jsymmes22
 
 ## Our Tools
@@ -22,12 +23,12 @@ git python-dev python-pip libffi-dev build-essential virtualenvwrapper
 #### Installation Instructions
 
 Navigate to folder where you'd like to install our tools
-```buildoutcfg
+```
 mkdir ~/i_am_root_ctf && cd ~/i_am_root_ctf
 ```
 Run the following commands to download the tools, and install the required dependences
 NOTE:  These package names apply to *buntu flavors of Linux.  We tested this on Xubuntu 16.04 x64 [Link to iso file](http://ftp.ussg.iu.edu/linux/xubuntu/16.04/release/xubuntu-16.04.2-desktop-amd64.iso)
-```buildoutcfg
+```
 sudo apt-get install git python-dev python-pip libffi-dev build-essential virtualenvwrapper
 git clone https://github.com/Nkury/cse545-ctftools.git
 cd cse545-ctftools
@@ -35,12 +36,12 @@ sudo virtualenv angr
 sudo pip install angr
 ```
 #### Usage
-```buildoutcfg
+```
 ./binaryfairy [-d] filename
 ```
 
 #### Sample Output
-```buildoutcfg
+```
 $ ./binaryfairy.py sample_c
 Binary Name: sample_c
 Binary Arch: <Arch AMD64 (LE)>
