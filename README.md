@@ -84,3 +84,14 @@ and the file shellcode has:
 \x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x53\x89\xe1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\x31\xdb\xcd\x80\x66\x90\x90
 ```
 which can be fed into an argument for a buffer overflow exploit.
+
+###phpfairy- The php static analysis tool
+
+#### Description
+This tool scans a php file for XSS, OS Command Injection, and SQL Injection. It does this by parsing the php file and collecting an array of user controlled variables. Then statements where user controlled variables are checked for sanitization methods. If a user controlled variable is found in a risky place then the user is alerted of the vulnerability line number.
+
+#### Usage
+```
+phpfairy <filename>
+```
+#### Sample Output
