@@ -156,7 +156,7 @@ def locateBuffers(vulnFunc, arch):
                     elif groupNum == 1:
                         offset = int(g, 16)
                         # Check if the buffer is large enough
-                        if offset > minBuffSize:
+                        if offset >= minBuffSize:
                             foundBuffer = True
                             vulnFunc.bufferAddrList.append(currentAddress)
                             vulnFunc.bufferOffsetList.append(offset)
@@ -184,10 +184,16 @@ parser = argparse.ArgumentParser(description="Search binary files for vulnerable
 parser.add_argument("filename", type=str, help="binary to be searched")
 parser.add_argument("-d", "--disassemble", action="store_true",
                     help="Disassemble vulnerable functions and print the assembly code")
+parser.add_argument("-b", "--min_buff_size", type=str,
+                    help="Specify the minimum size of the buffer to search for")
+
 args = parser.parse_args()
 
 if args.disassemble:
     printDisassembly = True
+
+if args.min_buff_size:
+    minBuffSize = int(args.min_buff_size, 16)
 
 proj = openProj(args.filename)
 
