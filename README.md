@@ -14,7 +14,6 @@ are accessed before calling the unsafe function.
 
 Future enhancements:
 - Read config file from ~/ to specify additional "bad" functions
-- Config file specifies minimum size of buffer to search for
 - Function specific code:  i.e. for strcpy, check if first argument is in .rodata and if so it's not vulnerable, so skip it.
 - Generate shellcode to overwrite saved EIP
 
@@ -37,9 +36,8 @@ sudo pip install angr
 ```
 #### Usage
 ```
-./binaryfairy [-d] filename
+binaryfairy.py [-h] [-d] [-b MIN_BUFF_SIZE] filename
 ```
-
 #### Sample Output
 ```
 $ ./binaryfairy.py sample_c
