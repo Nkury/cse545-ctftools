@@ -67,7 +67,7 @@ def locateVulnerableFunctions(cfg):
         for funcAddr, func in cfg.kb.functions.iteritems():
             # Temporary hack to disregard library references
             print("funcAddr" + str(format(funcAddr, 'x')))
-            if funcAddr < 0x01000000:
+            if funcAddr < 0x010000000:
                 print("unsafeFunc = " + unsafeFunc)
                 print("func.name = " + func.name)
                 # Found call to unsafe function
@@ -77,7 +77,7 @@ def locateVulnerableFunctions(cfg):
 
                     for vulnFunc_node in unsafeFunc_node.successors:
                         # Make sure node has a function name
-                        if vulnFunc_node.name and vulnFunc_node.addr < 0x01000000:
+                        if vulnFunc_node.name and vulnFunc_node.addr < 0x010000000:
                             # Some node.names have hex offsets applied to them
                             # these need to be pulled out before we can use them
                             try:
