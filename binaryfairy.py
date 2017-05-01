@@ -66,6 +66,7 @@ def locateVulnerableFunctions(cfg):
         # Iterate over functions in CFG
         for funcAddr, func in cfg.kb.functions.iteritems():
             # Temporary hack to disregard library references
+            print("funcAddr" + funcAddr)
             if funcAddr < 0x01000000:
                 # Found call to unsafe function
                 if unsafeFunc == func.name:
