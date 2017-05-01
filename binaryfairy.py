@@ -115,8 +115,6 @@ def locateBuffers(vulnFunc, arch):
     # Chop up the disassembly so we can parse it line by line
     disasm = vulnFunc.disassembly.splitlines(True)
 
-    print(arch.name)
-
     # Figure out what ebp will be called in the disassembly
     if arch.name == archinfo.ArchAMD64.name:
         ebp = "%rbp"
