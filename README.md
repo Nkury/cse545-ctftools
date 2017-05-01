@@ -59,3 +59,38 @@ Binary Entry: 0x400980
 0x400cd0: [ebp-0x120] reference before calling strcmp(0x400ce4)
 0x400cd7: [ebp-0x110] reference before calling strcmp(0x400ce4)
 ```
+
+### shellcoder - The Shellcode Generator
+
+#### Description
+A tool that aims to make writing shellcode as easy as ever. Who needs ASCII to HEX converters when you can use shellcoder?! Simply put in the name of the file you would like to open and shellcoder will do the work for you and put the results in a handy file called "shellcode". If no name is provided, it assumes you meant bin/sh. 
+
+Future enhancements:
+- Provide filename that the shellcode will be injected in and it will automatically overflow the buffer and overwrite the saved eip register.
+
+#### Usage
+```
+shellcode <filename>
+```
+
+#### Sample Output
+```
+$ ./binaryfairy.py sample_c
+Binary Name: sample_c
+Binary Arch: <Arch AMD64 (LE)>
+Binary Entry: 0x400980
+~~~Hey, Listen!!! I found a possible vulnerability in read_file!!~~~
+0x400fc1: [ebp-0x128] reference before calling fgets(0x401026)
+0x400fd7: [ebp-0x128] reference before calling fgets(0x401026)
+0x400feb: [ebp-0x118] reference before calling fgets(0x401026)
+0x400ff2: [ebp-0x118] reference before calling fgets(0x401026)
+0x401010: [ebp-0x118] reference before calling fgets(0x401026)
+0x401017: [ebp-0x110] reference before calling fgets(0x401026)
+~~~Hey, Listen!!! I found a possible vulnerability in read_note!!~~~
+0x400c67: [ebp-0x110] reference before calling strcmp(0x400ce4)
+0x400c6e: [ebp-0x124] reference before calling strcmp(0x400ce4)
+0x400c9b: [ebp-0x124] reference before calling strcmp(0x400ce4)
+0x400cc9: [ebp-0x120] reference before calling strcmp(0x400ce4)
+0x400cd0: [ebp-0x120] reference before calling strcmp(0x400ce4)
+0x400cd7: [ebp-0x110] reference before calling strcmp(0x400ce4)
+```
