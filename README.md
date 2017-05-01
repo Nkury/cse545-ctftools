@@ -85,10 +85,13 @@ and the file shellcode has:
 ```
 which can be fed into an argument for a buffer overflow exploit.
 
-###phpfairy- The php static analysis tool
+### phpfairy- The php static analysis tool
 
 #### Description
 This tool scans a php file for XSS, OS Command Injection, and SQL Injection. It does this by parsing the php file and collecting an array of user controlled variables. Then statements where user controlled variables are checked for sanitization methods. If a user controlled variable is found in a risky place then the user is alerted of the vulnerability line number.
+
+Future enhancements:
+- Patches code automatically by sanitizing the user controlled variables in a new file.  
 
 #### Usage
 ```
