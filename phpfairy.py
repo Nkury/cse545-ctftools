@@ -4,7 +4,7 @@ import re
 def usage():
     print("Usage: " + __file__ + " <path to php file>")
     print("\tExample: " + __file__ + " ./test.bin")
-debug = True
+debug = False
 if(debug):
     file = "test.php"
 else:
