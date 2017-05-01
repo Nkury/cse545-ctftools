@@ -98,3 +98,25 @@ Future enhancements:
 phpfairy <filename>
 ```
 #### Sample Output
+
+### manage_ctf - Quick and Dirty Management Tool for iCTF
+
+#### Description
+I built off what Connor Nelson sent the class so we can run some basic management commands from an interactive shell
+
+#### Usage
+```
+manage_ctf [-h] -t TEAM_INTERFACE -u USERNAME -p PASSWORD [-d]
+```
+
+#### Sample Output
+```
+./manaage_ctf -u <username> -p <password> -t <mgmt serer ip>
+Please select an option:
+1: Get Game Status
+2: Get Service List
+3: Get Targets
+4: Submit Flag
+5: Exit
+
+```
